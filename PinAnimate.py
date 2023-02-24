@@ -8,6 +8,8 @@ import imageio.v2 as imageio
 from pathlib import Path
 from PIL import Image
 from datetime import datetime
+#import cv2
+#import numpy as np
 
 desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
@@ -35,8 +37,8 @@ class PinAnimateWindow(Gtk.Window):
         self.save_button.connect("clicked", self.save_as_gif)
         self.grid.add(self.save_button)
         
-        self.export_button = Gtk.Button(label="Export as MP4")
-        self.export_button.connect("clicked", self.save_as_mp4)
+        self.export_button = Gtk.Button(label="Export as Video")
+        self.export_button.connect("clicked", self.save_as_video)
         self.grid.add(self.export_button)
         
         self.prev_button = Gtk.Button(label="Preview")
@@ -195,25 +197,35 @@ class PinAnimateWindow(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-    def save_as_mp4(self, export_button):   
+    def save_as_video(self, export_button):   
         fmt = '%Y-%m-%d_%H.%M.%S'
         now = datetime.now()
         current_time = now.strftime(fmt)
-
-        rows = self.treeView.get_model()
-
-        fps = float(self.fps.get_text())
         
-        out_filename = desktop + "\\" + 'PinAnimatedImages-%s.mp4' % current_time    
+        rows = self.treeView.get_model()
+        
+        fps = float(self.fps.get_text())
+        out_filename = desktop + "\\" + 'PinAnimatedImages-%s.avi' % current_time
+        
         writer = imageio.get_writer(out_filename, fps=fps)
-
+        #image_array = []
         for row in rows:
             file_name = ''.join([str(elem) for elem in row[0]])
             im = imageio.imread(file_name)
             writer.append_data(im)
-            
         writer.close()
 
+##            img = cv2.imread(file_name)
+##            height, width, layers = img.shape
+##            size = (width,height)
+##            image_array.append(img)
+##
+##        out = cv2.VideoWriter(out_filename, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+##
+##        for i in range(len(image_array)):
+##            out.write(image_array[i])
+##        out.release()
+            
         dialog = Gtk.MessageDialog(
             transient_for=self,
             flags=0,
