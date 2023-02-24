@@ -25,7 +25,7 @@ def resize_gif(path, save_as=None, resize_to=None):
         resize_to (optional): new size of the gif. Format: (int, int). If not set, the original GIF will be resized to
                               half of its size.
     """
-    duration = 200
+
     all_frames = extract_and_resize_frames(path, resize_to)
 
     if not save_as:
@@ -35,7 +35,7 @@ def resize_gif(path, save_as=None, resize_to=None):
         print("Warning: only 1 frame found")
         all_frames[0].save(save_as, optimize=True)
     else:
-        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=duration, loop=1000)
+        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=300, loop=1000)
 
 
 def analyseImage(path):
@@ -368,7 +368,7 @@ class PinAnimateWindow(Gtk.Window):
 
         out_filename = os.getcwd() + "\\" + 'temp.gif'
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
-        resize_gif(out_filename, duration=duration)
+        resize_gif(out_filename)
         
         self.pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file(out_filename)
         self.img = Gtk.Image()
