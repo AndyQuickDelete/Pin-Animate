@@ -25,6 +25,7 @@ def resize_gif(path, save_as=None, resize_to=None):
         resize_to (optional): new size of the gif. Format: (int, int). If not set, the original GIF will be resized to
                               half of its size.
     """
+    duration = 200
     all_frames = extract_and_resize_frames(path, resize_to)
 
     if not save_as:
@@ -34,7 +35,7 @@ def resize_gif(path, save_as=None, resize_to=None):
         print("Warning: only 1 frame found")
         all_frames[0].save(save_as, optimize=True)
     else:
-        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], loop=1000)
+        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=duration, loop=1000)
 
 
 def analyseImage(path):
@@ -82,7 +83,6 @@ def extract_and_resize_frames(path, resize_to=None):
     last_frame = im.convert('RGBA')
 
     all_frames = []
-
     try:
         while True:
             # print("saving %s (%s) frame %d, %s %s" % (path, mode, i, im.size, im.tile))
@@ -366,10 +366,9 @@ class PinAnimateWindow(Gtk.Window):
         fps = float(self.fps.get_text())
         duration = float(self.duration.get_text())
 
-        out_filename = os.getcwd() + "\\" + 'temp.gif'    
+        out_filename = os.getcwd() + "\\" + 'temp.gif'
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
-
-        resize_gif(out_filename)
+        resize_gif(out_filename, duration=duration)
         
         self.pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file(out_filename)
         self.img = Gtk.Image()
@@ -405,7 +404,7 @@ class PinAnimateWindow(Gtk.Window):
         )
 
         dialog.format_secondary_text(
-            "1 - You should adjust the FPS option when exporting your videos\n2 - Clicking an image filename will present a preview of that image\n3 - Image dimensions should be the same for best results\n4 - Animation previews will only play for up to 10 seconds"
+            "1 - You can adjust only the fps option for your videos\n2 - Clicking an image filename will present a preview of that image\n3 - Image dimensions should be the same for best results\n4 - Animation previews will only play for up to 10 seconds\n5 - Animation and image previews are scaled down in size\n6 - Supported file types are *.png and *.jpg\n7 - Previews are not optimized with your fps or duration settings"
         )
         
         dialog.run()
