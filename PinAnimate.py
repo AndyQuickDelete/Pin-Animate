@@ -123,8 +123,9 @@ class PinAnimateWindow(Gtk.Window):
         model, row = selection.get_selected()
         selected = model[row][0]
 
-        self.img = Gtk.Image()
-        self.img.set_from_file(selected)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(selected, 320, 320, GdkPixbuf.InterpType.BILINEAR)
+        self.img = Gtk.Image.new_from_pixbuf(pixbuf)
+        
         self.grid.attach(self.img, 5, 0, 4, 4)
         self.img.show()
 
@@ -149,7 +150,7 @@ class PinAnimateWindow(Gtk.Window):
             self.entry.set_text(dialog.get_filename())
 
             self.image_path = Path(self.directory)
-            self.images = list(self.image_path.glob('*.png'))
+            self.images = list(self.image_path.glob('*.png')) + list(self.image_path.glob('*.jpg'))
             image_list = []
 
             self.model.clear()
