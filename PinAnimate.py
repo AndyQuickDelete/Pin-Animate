@@ -81,6 +81,10 @@ class PinAnimateWindow(Gtk.Window):
         self.grid.attach(self.scrollable_treelist, 0, 2, 5, 1)
         self.scrollable_treelist.add(self.treeView)
 
+        self.hints_button = Gtk.Button(label="Helpful Hints")
+        self.hints_button.connect("clicked", self.helpful_hints)
+        self.grid.attach(self.hints_button, 2, 3, 1, 1)
+
         self.move_up = Gtk.Button(label="Move Up")
         self.move_up.connect("clicked", self.move_selected_items_up)
         self.grid.attach(self.move_up, 3, 3, 1, 1)
@@ -205,7 +209,7 @@ class PinAnimateWindow(Gtk.Window):
         rows = self.treeView.get_model()
         
         fps = float(self.fps.get_text())
-        out_filename = desktop + "\\" + 'PinAnimatedImages-%s.avi' % current_time
+        out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time
         
         writer = imageio.get_writer(out_filename, fps=fps)
         #image_array = []
@@ -275,6 +279,22 @@ class PinAnimateWindow(Gtk.Window):
 
         dialog.format_secondary_text(
             "1 - Choose a folder containing your png formatted images\n2 - Organize your images with the move up or down buttons\n3 - Set the duration and frames per second for the animated gif\n4 - Run a live preview of your animation\n5 - Finally export your animation as a gif to share with others"
+        )
+        
+        dialog.run()
+        dialog.destroy()
+
+    def helpful_hints(self, hints_button):     
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text="Helpful Hints!",
+        )
+
+        dialog.format_secondary_text(
+            "1 - You should adjust the FPS option when exporting your videos\n2 - Clicking an image filename will present a preview of that image\n3 - Image dimensions should be the same for best results\n4 - Animation previews will only play for up to 10 seconds"
         )
         
         dialog.run()
