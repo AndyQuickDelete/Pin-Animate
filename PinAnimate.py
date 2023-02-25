@@ -1,15 +1,13 @@
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
+from gi.repository import Gtk, Gdk, GObject, GLib, GdkPixbuf
 
 import os, time
 import imageio.v2 as imageio
 from pathlib import Path
 from PIL import Image
 from datetime import datetime
-#import cv2
-#import numpy as np
 
 desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
@@ -110,7 +108,7 @@ def extract_and_resize_frames(path, resize_to=None):
             except ValueError:
                 pass
 
-            new_frame.thumbnail(resize_to, Image.ANTIALIAS)
+            new_frame.thumbnail(resize_to, Image.LANCZOS)
             all_frames.append(new_frame)
 
             i += 1
@@ -125,6 +123,7 @@ def extract_and_resize_frames(path, resize_to=None):
 class PinAnimateWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Pin Animate")
+        
         self.set_border_width(1)
         self.set_default_size(640, 480)
         
@@ -246,9 +245,11 @@ class PinAnimateWindow(Gtk.Window):
             parent=self,
             action=Gtk.FileChooserAction.SELECT_FOLDER,
         )
+        
         dialog.add_buttons(
             Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, "Select", Gtk.ResponseType.OK
         )
+        
         dialog.set_default_size(360, 180)
 
         response = dialog.run()
@@ -267,8 +268,7 @@ class PinAnimateWindow(Gtk.Window):
             for file_name in self.images:
                 image = Image.open(str(file_name))
                 width, height = image.size
-                ImageSizes = "Width: %spx - Height: %spx" % (width, height)
-                    
+                ImageSizes = "Width: %spx - Height: %spx" % (width, height)       
                 image_list.append((str(file_name), ImageSizes))
             for image_ref in image_list:
                 self.model.append(list(image_ref))
@@ -311,7 +311,7 @@ class PinAnimateWindow(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-    def save_as_video(self, export_button):   
+    def save_as_video(self, export_button):
         fmt = '%Y-%m-%d_%H.%M.%S'
         now = datetime.now()
         current_time = now.strftime(fmt)
@@ -319,27 +319,15 @@ class PinAnimateWindow(Gtk.Window):
         rows = self.treeView.get_model()
         
         fps = float(self.fps.get_text())
-        out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time
-        
+        out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
+   
         writer = imageio.get_writer(out_filename, fps=fps)
-        #image_array = []
         for row in rows:
             file_name = ''.join([str(elem) for elem in row[0]])
             im = imageio.imread(file_name)
             writer.append_data(im)
         writer.close()
-
-##            img = cv2.imread(file_name)
-##            height, width, layers = img.shape
-##            size = (width,height)
-##            image_array.append(img)
-##
-##        out = cv2.VideoWriter(out_filename, cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
-##
-##        for i in range(len(image_array)):
-##            out.write(image_array[i])
-##        out.release()
-            
+     
         dialog = Gtk.MessageDialog(
             transient_for=self,
             flags=0,
@@ -354,7 +342,7 @@ class PinAnimateWindow(Gtk.Window):
         
         dialog.run()
         dialog.destroy()
-
+        
     def preview_image(self, prev_button):
         rows = self.treeView.get_model()
 
@@ -368,7 +356,13 @@ class PinAnimateWindow(Gtk.Window):
 
         out_filename = os.getcwd() + "\\" + 'temp.gif'
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
-        resize_gif(out_filename)
+
+        size_test = Image.open(out_filename)
+        width = size_test.width
+        height = size_test.height
+
+        if width > 512 or height > 512:
+            resize_gif(out_filename)
         
         self.pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file(out_filename)
         self.img = Gtk.Image()
