@@ -8,6 +8,7 @@ import imageio.v2 as imageio
 from pathlib import Path
 from PIL import Image
 from datetime import datetime
+import glob
 
 desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
@@ -120,6 +121,13 @@ def extract_and_resize_frames(path, resize_to=None):
     return all_frames
 ### END ###
 
+def compare_images(input_image, output_image):
+    ### Compare Image Dimensions ###
+    input_image = Image.open(input_image)
+    output_image = Image.open(output_image)
+    if input_image.size != output_image.size:
+        return False
+
 class PinAnimateWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="Pin Animate")
@@ -154,7 +162,7 @@ class PinAnimateWindow(Gtk.Window):
         self.grid.add(self.prev_button)
 
         self.fps = Gtk.Entry()
-        self.fps.set_text("24")
+        self.fps.set_text("1")
         self.fps.set_hexpand(True)
         self.grid.attach(self.fps, 0, 1, 1, 1)
 
@@ -264,12 +272,16 @@ class PinAnimateWindow(Gtk.Window):
             image_list = []
 
             self.model.clear()
-       
+            x = []
             for file_name in self.images:
+                x.append(file_name)
                 image = Image.open(str(file_name))
                 width, height = image.size
                 ImageSizes = "Width: %spx - Height: %spx" % (width, height)       
-                image_list.append((str(file_name), ImageSizes))
+                if compare_images(x[0], str(file_name)) != False: 
+                    image_list.append((str(file_name), ImageSizes))
+                else:
+                    pass
             for image_ref in image_list:
                 self.model.append(list(image_ref))
         elif response == Gtk.ResponseType.CANCEL:
@@ -320,7 +332,7 @@ class PinAnimateWindow(Gtk.Window):
         
         fps = float(self.fps.get_text())
         out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
-   
+
         writer = imageio.get_writer(out_filename, fps=fps)
         for row in rows:
             file_name = ''.join([str(elem) for elem in row[0]])
@@ -398,7 +410,7 @@ class PinAnimateWindow(Gtk.Window):
         )
 
         dialog.format_secondary_text(
-            "1 - You can adjust only the fps option for your videos\n2 - Clicking an image filename will present a preview of that image\n3 - Image dimensions should be the same for best results\n4 - Animation previews will only play for up to 10 seconds\n5 - Animation and image previews are scaled down in size\n6 - Supported file types are *.png and *.jpg\n7 - Previews are not optimized with your fps or duration settings"
+            "1 - You can adjust only the fps option for your videos\n2 - Clicking an image filename will present a preview of that image\n3 - All image sizes must be the same\n4 - Animation previews will only play for up to 10 seconds\n5 - Animation and image previews are scaled down in size\n6 - Supported file types are *.png and *.jpg\n7 - Previews are not optimized with your fps or duration settings"
         )
         
         dialog.run()
