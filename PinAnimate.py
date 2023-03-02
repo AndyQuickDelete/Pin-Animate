@@ -1,16 +1,21 @@
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GObject, GLib, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
-import os, time
+import os
 import imageio.v2 as imageio
 from pathlib import Path
 from PIL import Image
 from datetime import datetime
-import glob
+import platform
 
-desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+if platform.system() == 'Windows':
+    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+else:
+    desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Downloads')
+
+#desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
 ### START ###
 ### CODE FROM https://stackoverflow.com/questions/41718892/pillow-resizing-a-gif ###
@@ -134,10 +139,15 @@ class PinAnimateWindow(Gtk.Window):
         
         self.set_border_width(1)
         self.set_default_size(640, 480)
-        
-        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(os.getcwd() + '\\logo.png')
-        self.set_default_icon(self.pixbuf)
 
+##        if platform.system() == 'Darwin':
+##            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(os.getcwd() + '/logo.png')
+##            self.set_default_icon(self.pixbuf)
+
+        if platform.system() == 'Windows':
+            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(os.getcwd() + '\\logo.png')
+            self.set_default_icon(self.pixbuf)
+                
         self.grid = Gtk.Grid()
         
         self.entry = Gtk.Entry()
@@ -304,8 +314,12 @@ class PinAnimateWindow(Gtk.Window):
 
         fps = float(self.fps.get_text())
         duration = float(self.duration.get_text())
+        if platform.system() == 'Darwin':
+            out_filename = desktop + '/PinAnimatedImages-%s.gif' % current_time    
 
-        out_filename = desktop + "\\" + 'PinAnimatedImages-%s.gif' % current_time    
+        if platform.system() == 'Windows':
+            out_filename = desktop + "\\" + 'PinAnimatedImages-%s.gif' % current_time
+            
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
 
         dialog = Gtk.MessageDialog(
@@ -331,7 +345,11 @@ class PinAnimateWindow(Gtk.Window):
         rows = self.treeView.get_model()
         
         fps = float(self.fps.get_text())
-        out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
+        if platform.system() == 'Darwin':
+            out_filename = desktop + '/PinAnimatedMovie-%s.avi' % current_time
+            
+        if platform.system() == 'Windows':    
+            out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
 
         writer = imageio.get_writer(out_filename, fps=fps)
         for row in rows:
@@ -366,7 +384,12 @@ class PinAnimateWindow(Gtk.Window):
         fps = float(self.fps.get_text())
         duration = float(self.duration.get_text())
 
-        out_filename = os.getcwd() + "\\" + 'temp.gif'
+        if platform.system() == 'Darwin':
+            out_filename = os.getcwd() + '/temp.gif'
+
+        if platform.system() == 'Windows':
+            out_filename = os.getcwd() + "\\" + 'temp.gif'
+            
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
 
         size_test = Image.open(out_filename)
