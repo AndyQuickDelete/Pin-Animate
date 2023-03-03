@@ -17,6 +17,16 @@ else:
 
 #desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
+if platform.system() == 'Darwin':
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+
+
 ### START ###
 ### CODE FROM https://stackoverflow.com/questions/41718892/pillow-resizing-a-gif ###
 def resize_gif(path, save_as=None, resize_to=None):
@@ -141,7 +151,7 @@ class PinAnimateWindow(Gtk.Window):
         self.set_default_size(640, 480)
 
 ##        if platform.system() == 'Darwin':
-##            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(os.getcwd() + '/logo.png')
+##            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(resource_path('/logo.png'))
 ##            self.set_default_icon(self.pixbuf)
 
         if platform.system() == 'Windows':
