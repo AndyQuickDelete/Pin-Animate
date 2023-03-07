@@ -23,9 +23,8 @@ if platform.system() == 'Darwin':
             base_path = sys._MEIPASS
         except Exception:
             base_path = os.path.abspath(".")
-
+        
         return os.path.join(base_path, relative_path)
-
 
 ### START ###
 ### CODE FROM https://stackoverflow.com/questions/41718892/pillow-resizing-a-gif ###
@@ -145,14 +144,14 @@ def compare_images(input_image, output_image):
 
 class PinAnimateWindow(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Pin Animate")
+        super().__init__(title="PinAnimate")
         
         self.set_border_width(1)
         self.set_default_size(640, 480)
 
-##        if platform.system() == 'Darwin':
-##            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(resource_path('/logo.png'))
-##            self.set_default_icon(self.pixbuf)
+        if platform.system() == 'Darwin':
+            self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(resource_path('logo.png'))
+            self.set_default_icon(self.pixbuf)
 
         if platform.system() == 'Windows':
             self.pixbuf = GdkPixbuf.Pixbuf.new_from_file(os.getcwd() + '\\logo.png')
@@ -325,10 +324,10 @@ class PinAnimateWindow(Gtk.Window):
         fps = float(self.fps.get_text())
         duration = float(self.duration.get_text())
         if platform.system() == 'Darwin':
-            out_filename = desktop + '/PinAnimatedImages-%s.gif' % current_time    
+            out_filename = desktop + '/PinAnimatedImage-%s.gif' % current_time    
 
         if platform.system() == 'Windows':
-            out_filename = desktop + "\\" + 'PinAnimatedImages-%s.gif' % current_time
+            out_filename = desktop + "\\" + 'PinAnimatedImage-%s.gif' % current_time
             
         imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
 
