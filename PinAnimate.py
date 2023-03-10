@@ -4,9 +4,9 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
 import os
-import imageio.v2 as imageio
+# import imageio.v2 as imageio
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw
 from datetime import datetime
 import platform
 
@@ -14,8 +14,6 @@ if platform.system() == 'Windows':
     desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 else:
     desktop = os.path.join(os.path.join(os.path.expanduser('~')), 'Downloads')
-
-#desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
 
 if platform.system() == 'Darwin':
     def resource_path(relative_path):
@@ -28,7 +26,7 @@ if platform.system() == 'Darwin':
 
 ### START ###
 ### CODE FROM https://stackoverflow.com/questions/41718892/pillow-resizing-a-gif ###
-def resize_gif(path, save_as=None, resize_to=None):
+def resize_gif(path, myduration, save_as=None, resize_to=None):
     """
     Resizes the GIF to a given length:
 
@@ -41,6 +39,8 @@ def resize_gif(path, save_as=None, resize_to=None):
 
     all_frames = extract_and_resize_frames(path, resize_to)
 
+    myduration = int(myduration)
+
     if not save_as:
         save_as = path
 
@@ -48,7 +48,7 @@ def resize_gif(path, save_as=None, resize_to=None):
         print("Warning: only 1 frame found")
         all_frames[0].save(save_as, optimize=True)
     else:
-        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=300, loop=1000)
+        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=myduration, loop=1000)
 
 
 def analyseImage(path):
@@ -168,37 +168,42 @@ class PinAnimateWindow(Gtk.Window):
         self.open_button.connect("clicked", self.open_location)
         self.grid.add(self.open_button)
 
-        self.save_button = Gtk.Button(label="Export as Gif")
-        self.save_button.connect("clicked", self.save_as_gif)
-        self.grid.add(self.save_button)
-        
-        self.export_button = Gtk.Button(label="Export as Video")
-        self.export_button.connect("clicked", self.save_as_video)
-        self.grid.add(self.export_button)
-        
         self.prev_button = Gtk.Button(label="Preview")
         self.prev_button.connect("clicked", self.preview_image)
         self.grid.add(self.prev_button)
 
-        self.fps = Gtk.Entry()
-        self.fps.set_text("1")
-        self.fps.set_hexpand(True)
-        self.grid.attach(self.fps, 0, 1, 1, 1)
-
-        self.label = Gtk.Label(label="FPS")
-        self.grid.attach(self.label, 1, 1, 1, 1)
+        self.save_button = Gtk.Button(label="Export")
+        self.save_button.connect("clicked", self.save_as_gif)
+        self.grid.add(self.save_button)
         
-        self.duration = Gtk.Entry()
-        self.duration.set_text("0.2")
-        self.duration.set_width_chars(15)
-        self.grid.attach(self.duration, 2, 1, 1, 1)
-
-        self.label = Gtk.Label(label="Duration")
-        self.grid.attach(self.label, 3, 1, 1, 1) 
+        # self.export_button = Gtk.Button(label="Export as Video")
+        # self.export_button.connect("clicked", self.save_as_video)
+        # self.grid.add(self.export_button)
 
         self.help_button = Gtk.Button(label="Help/Info")
         self.help_button.connect("clicked", self.help_user)
-        self.grid.attach(self.help_button, 4, 1, 1, 1)
+        self.grid.add(self.help_button)
+
+        self.loop = Gtk.Entry()
+        self.loop.set_text("0")
+        self.loop.set_hexpand(True)
+        self.grid.attach(self.loop, 0, 1, 1, 1)
+
+        self.label = Gtk.Label(label="Loop")
+        self.grid.attach(self.label, 1, 1, 1, 1)
+        
+        self.duration = Gtk.Entry()
+        self.duration.set_text("300")
+        self.duration.set_hexpand(True)
+        #self.duration.set_width_chars(15)
+        self.grid.attach(self.duration, 2, 1, 2, 1)
+
+        self.label = Gtk.Label(label="Duration")
+        self.grid.attach(self.label, 4, 1, 1, 1) 
+
+        # self.help_button = Gtk.Button(label="Help/Info")
+        # self.help_button.connect("clicked", self.help_user)
+        # self.grid.attach(self.help_button, 4, 1, 1, 1)
 
         self.model = Gtk.ListStore(str, str)    
         self.treeView = Gtk.TreeView()
@@ -319,17 +324,24 @@ class PinAnimateWindow(Gtk.Window):
         for row in rows:
             #print(''.join([str(elem) for elem in row[0]]))
             file_name = ''.join([str(elem) for elem in row[0]])
-            image_list.append(imageio.imread(file_name))
+            image_list.append(Image.open(file_name))
 
-        fps = float(self.fps.get_text())
-        duration = float(self.duration.get_text())
+        loop = int(self.loop.get_text())
+        duration = int(self.duration.get_text())
+
         if platform.system() == 'Darwin':
             out_filename = desktop + '/PinAnimatedImage-%s.gif' % current_time    
 
         if platform.system() == 'Windows':
             out_filename = desktop + "\\" + 'PinAnimatedImage-%s.gif' % current_time
             
-        imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
+        #imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
+
+        image_list[0].save(out_filename,
+               save_all=True,
+               append_images=image_list[1:],
+               duration=duration,
+               loop=loop)
 
         dialog = Gtk.MessageDialog(
             transient_for=self,
@@ -346,41 +358,41 @@ class PinAnimateWindow(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-    def save_as_video(self, export_button):
-        fmt = '%Y-%m-%d_%H.%M.%S'
-        now = datetime.now()
-        current_time = now.strftime(fmt)
+    # def save_as_video(self, export_button):
+    #     fmt = '%Y-%m-%d_%H.%M.%S'
+    #     now = datetime.now()
+    #     current_time = now.strftime(fmt)
         
-        rows = self.treeView.get_model()
+    #     rows = self.treeView.get_model()
         
-        fps = float(self.fps.get_text())
-        if platform.system() == 'Darwin':
-            out_filename = desktop + '/PinAnimatedMovie-%s.avi' % current_time
+    #     fps = float(self.fps.get_text())
+    #     if platform.system() == 'Darwin':
+    #         out_filename = desktop + '/PinAnimatedMovie-%s.avi' % current_time
             
-        if platform.system() == 'Windows':    
-            out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
+    #     if platform.system() == 'Windows':    
+    #         out_filename = desktop + "\\" + 'PinAnimatedMovie-%s.avi' % current_time        
 
-        writer = imageio.get_writer(out_filename, fps=fps)
-        for row in rows:
-            file_name = ''.join([str(elem) for elem in row[0]])
-            im = imageio.imread(file_name)
-            writer.append_data(im)
-        writer.close()
+    #     writer = imageio.get_writer(out_filename, fps=fps)
+    #     for row in rows:
+    #         file_name = ''.join([str(elem) for elem in row[0]])
+    #         im = imageio.imread(file_name)
+    #         writer.append_data(im)
+    #     writer.close()
      
-        dialog = Gtk.MessageDialog(
-            transient_for=self,
-            flags=0,
-            message_type=Gtk.MessageType.INFO,
-            buttons=Gtk.ButtonsType.OK,
-            text="Your movie has been created!",
-        )
+    #     dialog = Gtk.MessageDialog(
+    #         transient_for=self,
+    #         flags=0,
+    #         message_type=Gtk.MessageType.INFO,
+    #         buttons=Gtk.ButtonsType.OK,
+    #         text="Your movie has been created!",
+    #     )
 
-        dialog.format_secondary_text(
-            "Your work has been saved to your Desktop folder."
-        )
+    #     dialog.format_secondary_text(
+    #         "Your work has been saved to your Desktop folder."
+    #     )
         
-        dialog.run()
-        dialog.destroy()
+    #     dialog.run()
+    #     dialog.destroy()
         
     def preview_image(self, prev_button):
         rows = self.treeView.get_model()
@@ -388,10 +400,11 @@ class PinAnimateWindow(Gtk.Window):
         image_list = []
         for row in rows:
             file_name = ''.join([str(elem) for elem in row[0]])
-            image_list.append(imageio.imread(file_name))
+            #image_list.append(imageio.imread(file_name))
+            image_list.append(Image.open(file_name))
 
-        fps = float(self.fps.get_text())
-        duration = float(self.duration.get_text())
+        loop = int(self.loop.get_text())
+        duration = int(self.duration.get_text())
 
         if platform.system() == 'Darwin':
             out_filename = os.getcwd() + '/temp.gif'
@@ -399,14 +412,20 @@ class PinAnimateWindow(Gtk.Window):
         if platform.system() == 'Windows':
             out_filename = os.getcwd() + "\\" + 'temp.gif'
             
-        imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
+        #imageio.mimwrite(out_filename, image_list, fps=fps, duration=duration)
+
+        image_list[0].save(out_filename,
+               save_all=True,
+               append_images=image_list[1:],
+               duration=duration,
+               loop=loop)
 
         size_test = Image.open(out_filename)
         width = size_test.width
         height = size_test.height
 
         if width > 512 or height > 512:
-            resize_gif(out_filename)
+            resize_gif(out_filename, duration)
         
         self.pixbufanim = GdkPixbuf.PixbufAnimation.new_from_file(out_filename)
         self.img = Gtk.Image()
@@ -424,9 +443,14 @@ class PinAnimateWindow(Gtk.Window):
             buttons=Gtk.ButtonsType.OK,
             text="Your simple guide to PinAnimate!",
         )
-
+        
+        self.info = "1 - Choose a folder containing your png formatted images\n"
+        self.info += "2 - Organize your images with the move up or down buttons\n"
+        self.info += "3 - Set the duration and frames per second for the animated gif\n"
+        self.info += "4 - Run a live preview of your animation\n"
+        self.info += "5 - Finally export your animation as a gif to share with others"
         dialog.format_secondary_text(
-            "1 - Choose a folder containing your png formatted images\n2 - Organize your images with the move up or down buttons\n3 - Set the duration and frames per second for the animated gif\n4 - Run a live preview of your animation\n5 - Finally export your animation as a gif to share with others"
+            self.info
         )
         
         dialog.run()
@@ -441,8 +465,16 @@ class PinAnimateWindow(Gtk.Window):
             text="Helpful Hints!",
         )
 
+        self.info = "1 - You can adjust the loop count and duration for your animations\n"
+        self.info += "2 - Clicking an image filename will present a preview of that image\n"
+        self.info += "3 - All image sizes must be the same\n"
+        self.info += "4 - Animation previews will only play for up to 10 seconds\n"
+        self.info += "5 - Animation and image previews are scaled down in size\n"
+        self.info += "6 - Supported file types are *.png and *.jpg\n"
+        self.info += "7 - Previews are optimized with your duration settings"
+
         dialog.format_secondary_text(
-            "1 - You can adjust only the fps option for your videos\n2 - Clicking an image filename will present a preview of that image\n3 - All image sizes must be the same\n4 - Animation previews will only play for up to 10 seconds\n5 - Animation and image previews are scaled down in size\n6 - Supported file types are *.png and *.jpg\n7 - Previews are not optimized with your fps or duration settings"
+            self.info
         )
         
         dialog.run()
