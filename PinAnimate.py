@@ -9,6 +9,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from datetime import datetime
 import platform
+from natsort import natsorted
 
 if platform.system() == 'Windows':
     desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
@@ -48,7 +49,7 @@ def resize_gif(path, myduration, save_as=None, resize_to=None):
         print("Warning: only 1 frame found")
         all_frames[0].save(save_as, optimize=True)
     else:
-        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=myduration, loop=1000)
+        all_frames[0].save(save_as, optimize=True, save_all=True, append_images=all_frames[1:], duration=myduration, loop=0)
 
 
 def analyseImage(path):
@@ -184,19 +185,19 @@ class PinAnimateWindow(Gtk.Window):
         self.help_button.connect("clicked", self.help_user)
         self.grid.add(self.help_button)
 
-        self.loop = Gtk.Entry()
-        self.loop.set_text("0")
-        self.loop.set_hexpand(True)
-        self.grid.attach(self.loop, 0, 1, 1, 1)
+        # self.loop = Gtk.Entry()
+        # self.loop.set_text("0")
+        # self.loop.set_hexpand(True)
+        # self.grid.attach(self.loop, 0, 1, 1, 1)
 
-        self.label = Gtk.Label(label="Loop")
-        self.grid.attach(self.label, 1, 1, 1, 1)
+        # self.label = Gtk.Label(label="Loop")
+        # self.grid.attach(self.label, 1, 1, 1, 1)
         
         self.duration = Gtk.Entry()
         self.duration.set_text("300")
         self.duration.set_hexpand(True)
         #self.duration.set_width_chars(15)
-        self.grid.attach(self.duration, 2, 1, 2, 1)
+        self.grid.attach(self.duration, 0, 1, 4, 1)
 
         self.label = Gtk.Label(label="Duration")
         self.grid.attach(self.label, 4, 1, 1, 1) 
@@ -306,6 +307,9 @@ class PinAnimateWindow(Gtk.Window):
                     image_list.append((str(file_name), ImageSizes))
                 else:
                     pass
+                
+            image_list = natsorted(image_list)
+
             for image_ref in image_list:
                 self.model.append(list(image_ref))
         elif response == Gtk.ResponseType.CANCEL:
@@ -326,7 +330,7 @@ class PinAnimateWindow(Gtk.Window):
             file_name = ''.join([str(elem) for elem in row[0]])
             image_list.append(Image.open(file_name))
 
-        loop = int(self.loop.get_text())
+        #loop = int(self.loop.get_text())
         duration = int(self.duration.get_text())
 
         if platform.system() == 'Darwin':
@@ -341,7 +345,7 @@ class PinAnimateWindow(Gtk.Window):
                save_all=True,
                append_images=image_list[1:],
                duration=duration,
-               loop=loop)
+               loop=0)
 
         dialog = Gtk.MessageDialog(
             transient_for=self,
@@ -403,7 +407,7 @@ class PinAnimateWindow(Gtk.Window):
             #image_list.append(imageio.imread(file_name))
             image_list.append(Image.open(file_name))
 
-        loop = int(self.loop.get_text())
+        #loop = int(self.loop.get_text())
         duration = int(self.duration.get_text())
 
         if platform.system() == 'Darwin':
@@ -418,7 +422,7 @@ class PinAnimateWindow(Gtk.Window):
                save_all=True,
                append_images=image_list[1:],
                duration=duration,
-               loop=loop)
+               loop=0)
 
         size_test = Image.open(out_filename)
         width = size_test.width
