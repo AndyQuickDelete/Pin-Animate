@@ -447,12 +447,11 @@ class PinAnimateWindow(Gtk.Window):
             buttons=Gtk.ButtonsType.OK,
             text="Your simple guide to PinAnimate!",
         )
-        
-        self.info = "1 - Choose a folder containing your png formatted images\n"
+        self.info = ""
+        self.info += "1 - Choose a folder containing your png formatted images\n"
         self.info += "2 - Organize your images with the move up or down buttons\n"
-        self.info += "3 - Set the duration and frames per second for the animated gif\n"
-        self.info += "4 - Run a live preview of your animation\n"
-        self.info += "5 - Finally export your animation as a gif to share with others"
+        self.info += "3 - Set the duration and run a live preview of your animation\n"
+        self.info += "4 - Finally export your animation as a gif to share with others"
         dialog.format_secondary_text(
             self.info
         )
@@ -469,9 +468,10 @@ class PinAnimateWindow(Gtk.Window):
             text="Helpful Hints!",
         )
 
-        self.info = "1 - You can adjust the loop count and duration for your animations\n"
+        self.info = ""
+        self.info += "1 - You can adjust the duration of your animations\n"
         self.info += "2 - Clicking an image filename will present a preview of that image\n"
-        self.info += "3 - All image sizes must be the same\n"
+        self.info += "3 - Image dimensions must be the same for each image\n"
         self.info += "4 - Animation previews will only play for up to 10 seconds\n"
         self.info += "5 - Animation and image previews are scaled down in size\n"
         self.info += "6 - Supported file types are *.png and *.jpg\n"
